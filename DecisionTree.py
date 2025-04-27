@@ -1,11 +1,9 @@
 import pandas as pd
-import numpy as np
-import matplotlib
-matplotlib.use('Agg')  # 🔁 Ajout pour éviter l'erreur mémoire
+import numpy as np 
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.tree import DecisionTreeClassifier, plot_tree
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, ConfusionMatrixDisplay  # Ajout de ConfusionMatrixDisplay
 
 # 1. Charger les données
 df = pd.read_csv("cleaned_data.csv", sep=';')
@@ -30,7 +28,9 @@ model.fit(X_train, y_train)
 plt.figure(figsize=(15, 10))
 plot_tree(model, feature_names=features, class_names=["Low", "High"], filled=True)
 plt.title("Arbre de décision ")
-plt.savefig('tree_default.png') 
+plt.savefig('tree_default.png', dpi=300) 
+plt.show() 
+
 
 
 # 6. Prédictions
@@ -57,4 +57,54 @@ print("Accuracy (criterion='entropy', max_depth=3):", acc_entropy)
 plt.figure(figsize=(30, 20))
 plot_tree(model_entropy, feature_names=features, class_names=["Low", "High"], filled=True)
 plt.title("Arbre de décision (criterion='entropy', max_depth=3)")
-plt.savefig('tree.png')
+plt.savefig('tree.png', dpi=300)  # dpi 300 pour haute résolution
+
+plt.show()  # pour voir directement l'arbre
+
+
+# 1. Matrice de confusion pour le modèle avec 'gini'
+cm = confusion_matrix(y_test, y_pred)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["Low", "High"])
+disp.plot(cmap='Blues')
+plt.title("Matrice de confusion (criterion='gini')")
+
+plt.show()
+
+# 2. Matrice de confusion pour le modèle avec 'entropy'
+cm_entropy = confusion_matrix(y_test, y_pred_entropy)
+disp_entropy = ConfusionMatrixDisplay(confusion_matrix=cm_entropy, display_labels=["Low", "High"])
+disp_entropy.plot(cmap='Blues')
+plt.title("Matrice de confusion (criterion='entropy')")
+plt.show()
+
+# 3. Tracer les scores de validation croisée
+plt.figure(figsize=(8, 5))
+plt.plot(range(1, 6), cv_scores, marker='o', linestyle='-')
+plt.title("Scores de validation croisée")
+plt.xlabel("Fold")
+plt.ylabel("Score")
+plt.grid(True)
+plt.ylim(0, 1)
+plt.show()
+
+# 4. Importance des variables (features)
+importances = model.feature_importances_
+indices = np.argsort(importances)[::-1]
+
+plt.figure(figsize=(10, 6))
+plt.bar(range(len(importances)), importances[indices])
+plt.xticks(range(len(importances)), [features[i] for i in indices], rotation=90)
+plt.title("Importance des variables (criterion='gini')")
+plt.tight_layout()
+plt.show()
+
+# 5. Importance des variables pour le modèle avec 'entropy'
+importances_entropy = model_entropy.feature_importances_
+indices_entropy = np.argsort(importances_entropy)[::-1]
+
+plt.figure(figsize=(10, 6))
+plt.bar(range(len(importances_entropy)), importances_entropy[indices_entropy])
+plt.xticks(range(len(importances_entropy)), [features[i] for i in indices_entropy], rotation=90)
+plt.title("Importance des variables (criterion='entropy')")
+plt.tight_layout()
+plt.show()
